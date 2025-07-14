@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>No Home Page – Aether Inc.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #dbeafe;
+      --bg: #f9fafb;
+      --text: #1e293b;
+      --card-bg: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      width: 100%;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      background-color: white;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: radial-gradient(circle at top left, var(--primary-light), transparent 60%);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      padding: 3rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 12px 24px rgba(30, 64, 175, 0.05);
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 0.6s ease-out forwards;
+      transform: translateY(20px);
+      opacity: 0;
+    }
+
+    .emoji {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 2rem;
+        border-radius: 1rem;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+
+      header {
+        padding: 1rem 1.5rem;
+      }
+
+      .logo {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Aether Inc.</div>
+  </header>
+  <main>
+    <div class="card">
+      <div class="emoji">🛸</div>
+      <h1>No Home Page Exists</h1>
+      <p>
+        There's no public landing page for this system.<br />
+        If you're looking for something specific, you probably know where to go.
+      </p>
+      <!-- Optional redirect logic below -->
+      <!-- 
+      <script>
+        setTimeout(() => {
+          window.location.href = "https://employee-system-gd52.onrender.com";
+        }, 4000);
+      </script>
+      -->
+    </div>
+  </main>
+</body>
+</html>
