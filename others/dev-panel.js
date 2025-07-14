@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import { authMiddleware, loginHandler } from '../pages/auth.js';
 import { buildHandler } from '../pages/build.js';
 
+import { createBot } from '../handlers/discord.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
@@ -31,5 +33,14 @@ app.get('/login', (req, res) => {
 app.post('/login', loginHandler);
 
 app.get('/build', authMiddleware, buildHandler);
+
+const cassitydev = createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
+cassitydev; // Run the bot instance if needed
+
+process.on('SIGINT', () => {
+    console.log('Shutting down...');
+    cassitydev.destroy();
+    process.exit(0);
+});
 
 app.listen(process.env.PORT || 2000);
