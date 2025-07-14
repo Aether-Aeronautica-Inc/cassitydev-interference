@@ -7,12 +7,6 @@ import { buildHandler } from '../pages/build.js';
 
 import { createBot } from './bot-manager.js';
 
-// Environment variable
-import dotenv from 'dotenv';
-dotenv.config({ path: "/etc/secrets/.env" });
-
-let cassitydev; // Global bot instance
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
@@ -25,8 +19,6 @@ app.use(session({
 }));
 
 app.get('/', (req, res) => {
-  cassitydev = createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
-  cassitydev; // Run the bot instance if needed
   res.sendFile(path.join(__dirname, '..', 'pages', 'home.html'));
 });
 
@@ -39,12 +31,7 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', loginHandler);
+
 app.get('/build', authMiddleware, buildHandler);
 
 app.listen(process.env.PORT || 2000);
-
-process.on('SIGINT', () => {
-  console.log('Shutting down...');
-  cassitydev.destroy();
-  process.exit(0);
-});
