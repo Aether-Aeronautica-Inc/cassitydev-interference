@@ -1,44 +1,48 @@
 // src/handlers/actions.js
 
-import fs from 'fs/promises'; // For local sandboxing
+import fs from 'fs/promises';
+import { VM } from 'vm2';
 import { exec } from 'child_process';
 import util from 'util';
+import fetch from 'node-fetch';
+
 const execAsync = util.promisify(exec);
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const KNOWLEDGE_BASE = {
+  "how to add a role": "Use `assign_role` intent with user_id and role_id.",
+  "repo setup": "Clone the GitHub repo and run `npm install`.",
+};
 
 const actions = {
   // 📩 COMMUNICATION
   send_email: async ({ recipient, subject, body }) => {
-    console.log(`📧 Sending email to ${recipient}`);
-    return { reply: `Email sent to ${recipient}.` };
+    console.log(`📧 Email sent to ${recipient}: ${subject}`);
+    return { reply: `📨 Email queued for ${recipient}` };
   },
 
   send_discord_message: async ({ channel_id, message }, context) => {
     const channel = context.client.channels.cache.get(channel_id);
-    if (!channel) return { reply: `❌ Channel ${channel_id} not found.` };
+    if (!channel) return { reply: `❌ Invalid channel.` };
     await channel.send(message);
-    return { reply: `✅ Message sent in <#${channel_id}>.` };
+    return { reply: `✅ Message sent to <#${channel_id}>.` };
   },
 
-  // 🛠️ GIT + FILE SYSTEM
+  // 🧠 SANDBOXED CODE (vm2)
+  run_code_secure: async ({ code }) => {
+    try {
+      const vm = new VM({ timeout: 1000, sandbox: {} });
+      const result = vm.run(code);
+      return { reply: `🧠 Result: ${JSON.stringify(result)}` };
+    } catch (err) {
+      return { reply: `💥 VM Error: ${err.message}` };
+    }
+  },
+
+  // 🛠️ FILE + GITOPS
   create_file: async ({ name, content }) => {
     await fs.writeFile(`./sandbox/${name}`, content);
-    return { reply: `📁 File "${name}" created in sandbox.` };
-  },
-
-  run_code: async ({ language, code }) => {
-    if (language !== 'javascript') {
-      return { reply: `❌ Only JavaScript is supported in sandbox.` };
-    }
-
-    const filepath = './sandbox/tmp.js';
-    await fs.writeFile(filepath, code);
-
-    try {
-      const { stdout } = await execAsync(`node ${filepath}`);
-      return { reply: `🧠 Output:\n${stdout}` };
-    } catch (err) {
-      return { reply: `💥 Error:\n${err.message}` };
-    }
+    return { reply: `📁 File "${name}" saved.` };
   },
 
   git_commit: async ({ message }) => {
@@ -50,47 +54,86 @@ const actions = {
     }
   },
 
-  // 🧠 SELF AUTOMATION
-  schedule_task: async ({ cron, action }) => {
-    // You can implement real cron jobs with node-cron or Agenda
-    console.log(`📅 Scheduled: ${JSON.stringify(action)} to run at ${cron}`);
-    return { reply: `🕒 Task scheduled for ${cron}` };
+  // 🧠 SELF-AUTOMATION
+  define_command: async ({ name, description, response }, context) => {
+    context.commands[name] = { description, response };
+    return { reply: `🛠️ Slash command "${name}" registered.` };
   },
 
-  define_command: async ({ name, description, code }) => {
-    // Save the command in your command registry
-    console.log(`⚙️ New command: ${name} - ${description}`);
-    return { reply: `✅ Slash command "${name}" defined.` };
+  schedule_task: async ({ cron, intent, args }) => {
+    console.log(`🕒 Task scheduled: ${cron} → ${intent}`);
+    return { reply: `📆 Task set: ${intent} @ ${cron}` };
   },
 
-  // 🎮 DISCORD MANAGEMENT
+  // 🧠 MEMORY & KNOWLEDGE
+  remember_fact: async ({ key, value }, context) => {
+    context.memory[key] = value;
+    return { reply: `🧠 Remembered: ${key} = ${value}` };
+  },
+
+  recall_fact: async ({ key }, context) => {
+    const val = context.memory[key];
+    return { reply: val ? `📌 ${key} = ${val}` : `⚠️ No memory for ${key}` };
+  },
+
+  ask_kb: async ({ query }) => {
+    const result = Object.entries(KNOWLEDGE_BASE).find(([k]) =>
+      query.toLowerCase().includes(k)
+    );
+    return { reply: result ? `📚 ${result[1]}` : `🔍 No result found.` };
+  },
+
+  // 🧱 GITHUB API INTEGRATION
+  github_create_issue: async ({ repo, title, body }) => {
+    const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        'User-Agent': 'AI-Employee',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title, body }),
+    });
+    const json = await res.json();
+    return { reply: res.ok ? `✅ Issue created: ${json.html_url}` : `❌ GitHub error: ${json.message}` };
+  },
+
+  // 🧼 MODERATION & DISCORD MGMT
   assign_role: async ({ user_id, role_id }, context) => {
-    const guild = context.msg.guild;
-    const member = await guild.members.fetch(user_id);
-    if (!member) return { reply: `User not found.` };
+    const member = await context.msg.guild.members.fetch(user_id);
     await member.roles.add(role_id);
-    return { reply: `🎖️ Role assigned to <@${user_id}>.` };
+    return { reply: `🎖️ Role <@&${role_id}> assigned to <@${user_id}>.` };
   },
 
   kick_user: async ({ user_id, reason }, context) => {
-    const guild = context.msg.guild;
-    const member = await guild.members.fetch(user_id);
-    if (!member) return { reply: `User not found.` };
+    const member = await context.msg.guild.members.fetch(user_id);
     await member.kick(reason);
-    return { reply: `👢 Kicked <@${user_id}> for: ${reason}` };
+    return { reply: `👢 Kicked <@${user_id}>: ${reason}` };
   },
 
   get_my_roles: async ({}, context) => {
-    const botMember = await context.msg.guild.members.fetch(context.client.user.id);
-    const roleNames = botMember.roles.cache.map(r => r.name);
-    return { reply: `🤖 My roles: ${roleNames.join(', ')}` };
+    const bot = await context.msg.guild.members.fetch(context.client.user.id);
+    const roles = bot.roles.cache.map(r => r.name).join(', ');
+    return { reply: `🤖 I have roles: ${roles}` };
   },
 
-  // 👁️ MONITORING
-  log_thought: async ({ content }) => {
-    console.log(`🧠 Thought log: ${content}`);
-    return { reply: `📝 Thought saved.` };
-  }
+  // 🛑 RATE LIMITING
+  set_rate_limit: async ({ type, maxPerMinute }, context) => {
+    context.rateLimits[type] = { maxPerMinute };
+    return { reply: `🚦 Rate limit for ${type}: ${maxPerMinute}/min` };
+  },
+
+  check_rate_limit: async ({ type }, context) => {
+    const current = context.rateUsage?.[type] || 0;
+    const max = context.rateLimits?.[type]?.maxPerMinute || '∞';
+    return { reply: `⏱️ ${type}: ${current}/${max} used this minute.` };
+  },
+
+  // 👁️ THOUGHTS
+  log_thought: async ({ content }, context) => {
+    context.logs.push({ type: 'thought', content, timestamp: Date.now() });
+    return { reply: `💭 Logged internal monologue.` };
+  },
 };
 
 export default actions;
