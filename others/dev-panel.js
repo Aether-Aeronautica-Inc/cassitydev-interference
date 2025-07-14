@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { authMiddleware, loginHandler } from '../pages/auth.js';
 import { buildHandler } from '../pages/build.js';
 
-import { createBot } from '../handlers/discord.js';
+import { createBot } from './bot-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
