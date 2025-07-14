@@ -1,0 +1,16 @@
+{
+    "main": "src/index.js",
+    "scripts": {
+        "start": "node src/index.js"
+    },
+    "dependencies": {
+        "discord": "^0.8.2",
+        "dotenv": "^17.2.0",
+        "fs": "^0.0.1-security",
+        "groq": "^3.99.0",
+        "node-fetch": "^3.3.2",
+        "path": "^0.12.7",
+        "util": "^0.12.5",
+        "vm2": "^3.9.19"
+    }
+}

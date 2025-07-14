@@ -6,6 +6,13 @@ import { exec } from 'child_process';
 import util from 'util';
 import fetch from 'node-fetch';
 
+import {
+  getMemory,
+  setMemory,
+  getAllMemory,
+  saveMemory
+} from './memory.js';
+
 const execAsync = util.promisify(exec);
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -63,17 +70,6 @@ const actions = {
   schedule_task: async ({ cron, intent, args }) => {
     console.log(`🕒 Task scheduled: ${cron} → ${intent}`);
     return { reply: `📆 Task set: ${intent} @ ${cron}` };
-  },
-
-  // 🧠 MEMORY & KNOWLEDGE
-  remember_fact: async ({ key, value }, context) => {
-    context.memory[key] = value;
-    return { reply: `🧠 Remembered: ${key} = ${value}` };
-  },
-
-  recall_fact: async ({ key }, context) => {
-    const val = context.memory[key];
-    return { reply: val ? `📌 ${key} = ${val}` : `⚠️ No memory for ${key}` };
   },
 
   ask_kb: async ({ query }) => {
@@ -134,6 +130,30 @@ const actions = {
     context.logs.push({ type: 'thought', content, timestamp: Date.now() });
     return { reply: `💭 Logged internal monologue.` };
   },
+
+  // Memory related actions
+  remember_fact: async ({ key, value }) => {
+    setMemory(key, value);
+    await saveMemory();
+    return { reply: `🧠 Remembered: ${key} = ${value}` };
+  },
+  
+  recall_fact: async ({ key }) => {
+    const val = getMemory(key);
+    return { reply: val ? `📌 ${key} = ${val}` : `⚠️ No memory for ${key}` };
+  },
+  
+  dump_memory: async () => {
+    const data = getAllMemory();
+    const dump = JSON.stringify(data, null, 2);
+    return { reply: `🧾 Memory:\n\`\`\`json\n${dump.slice(0, 1900)}\n\`\`\`` };
+  },
+
+  reset_memory: async () => {
+    clearMemory();
+    await saveMemory();
+    return { reply: `🧹 Memory wiped.` };
+  },  
 };
 
 export default actions;
