@@ -13,7 +13,12 @@ import './others/keep-alive.js';
 // Load memory
 await loadMemory();
 
-createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
-createBot(process.env.DISCORD_TOKEN_2, 'DevAgent');
-createBot(process.env.DISCORD_TOKEN_3, 'ManagerAI');
+const cassitydev = createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
+// createBot(process.env.DISCORD_TOKEN_2, 'DevAgent');
+// createBot(process.env.DISCORD_TOKEN_3, 'ManagerAI');
 
+process.on('SIGINT', () => {
+    console.log('Shutting down...');
+    cassitydev.destroy();
+    process.exit(0);
+});

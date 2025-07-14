@@ -74,7 +74,7 @@ If no action is needed, respond naturally.
 `.trim();
 }
 
-async function queryGroq(prompt, agentName = 'default-agent') {
+export async function queryGroq(prompt, agentName = 'default-agent') {
   const response = await fetch('https://api.groq.com/v1/chat/completions', {
     method: 'POST',
     headers: {

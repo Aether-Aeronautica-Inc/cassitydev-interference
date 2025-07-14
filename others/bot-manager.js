@@ -17,4 +17,5 @@ export function createBot(token, agentName) {
   });
 
   client.login(token);
+  return client;
 }
