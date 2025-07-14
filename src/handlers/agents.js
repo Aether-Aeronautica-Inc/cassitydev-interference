@@ -1,4 +1,6 @@
+// src/handlers/agents.js
 import { executeIntent } from './executor.js';
+import actions from './actions.js';
 import fetch from 'node-fetch';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -38,26 +40,37 @@ export async function handleMessage(msg, agentName, client) {
 }
 
 function buildPrompt(msg, agentName) {
+  const availableIntents = Object.entries(actions).map(([name, fn]) => {
+    const fnArgs = fn.toString().match(/\(\{([^}]*)\}/);
+    const args = fnArgs?.[1]?.split(',').map(arg => arg.trim()) || [];
+    return `- ${name}(${args.join(', ')})`;
+  }).join('\n');
+
   return `
 Incoming message in channel #${msg.channel.name}:
 "${msg.content}"
 
 Your Discord role: ${getRoleSummary(msg, agentName)}
 
-Respond as ${agentName}. If an action should be performed, return it in JSON wrapped with triple backticks like:
+You are ${agentName}, an AI employee in a Discord server.
+
+Available actions you may invoke:
+${availableIntents}
+
+If an action should be performed, return it as JSON wrapped in triple backticks like:
 
 \`\`\`json
 {
-  "intent": "send_message",
+  "intent": "send_discord_message",
   "args": {
     "channel_id": "123",
-    "message": "This is a test."
+    "message": "This is a test"
   },
   "safety_check": true
 }
 \`\`\`
 
-If no action is needed, reply naturally.
+If no action is needed, respond naturally.
 `.trim();
 }
 

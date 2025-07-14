@@ -52,14 +52,36 @@ const actions = {
     return { reply: `📁 File "${name}" saved.` };
   },
 
-  git_commit: async ({ message }) => {
+  git_commit: async ({ message }, context) => {
     try {
-      await execAsync(`git add . && git commit -m "${message}"`);
-      return { reply: `✅ Git commit created.` };
+      const botId = context.client?.user?.id;
+      const gitName = process.env[`GITHUB_NAME_${botId}`];
+      const gitEmail = process.env[`GITHUB_EMAIL_${botId}`];
+  
+      if (!gitName || !gitEmail) {
+        return { reply: `❌ Git identity not configured for bot ID ${botId}` };
+      }
+  
+      await execAsync(`git config user.name "${gitName}"`);
+      await execAsync(`git config user.email "${gitEmail}"`);
+  
+      await execAsync(`git add .`);
+      await execAsync(`git commit -m "${message}"`);
+  
+      return { reply: `✅ Commit by ${gitName} created.` };
     } catch (err) {
       return { reply: `❌ Git error: ${err.message}` };
     }
   },
+
+  git_push: async ({ branch = 'main' }, context) => {
+    try {
+      await execAsync(`git push origin ${branch}`);
+      return { reply: `🚀 Pushed to ${branch}.` };
+    } catch (err) {
+      return { reply: `❌ Push failed: ${err.message}` };
+    }
+  },  
 
   // 🧠 SELF-AUTOMATION
   define_command: async ({ name, description, response }, context) => {
@@ -80,19 +102,54 @@ const actions = {
   },
 
   // 🧱 GITHUB API INTEGRATION
-  github_create_issue: async ({ repo, title, body }) => {
+  github_create_issue: async ({ repo, title, body }, context) => {
+    const botId = context.client?.user?.id;
+    const tokenEnvKey = `GITHUB_TOKEN_${botId}`;
+    const token = process.env[tokenEnvKey];
+  
+    if (!token) {
+      return { reply: `❌ GitHub token not found for bot ID: ${botId}` };
+    }
+  
     const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         'User-Agent': 'AI-Employee',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ title, body }),
     });
+  
     const json = await res.json();
-    return { reply: res.ok ? `✅ Issue created: ${json.html_url}` : `❌ GitHub error: ${json.message}` };
+    return {
+      reply: res.ok
+        ? `✅ Issue created: ${json.html_url}`
+        : `❌ GitHub error: ${json.message}`,
+    };
   },
+  
+  whoami_github: async ({}, context) => {
+    const botId = context.client?.user?.id;
+    const tokenEnvKey = `GITHUB_TOKEN_BOT_${botId}`;
+    const token = process.env[tokenEnvKey];
+  
+    if (!token) return { reply: `❌ No GitHub token found for bot ID: ${botId}` };
+  
+    const res = await fetch("https://api.github.com/user", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'User-Agent': 'AI-Employee',
+      }
+    });
+  
+    const json = await res.json();
+    return {
+      reply: res.ok
+        ? `👤 GitHub user: ${json.login}`
+        : `❌ Failed to get GitHub user: ${json.message}`,
+    };
+  },  
 
   // 🧼 MODERATION & DISCORD MGMT
   assign_role: async ({ user_id, role_id }, context) => {
