@@ -34,6 +34,10 @@ app.post('/login', loginHandler);
 
 app.get('/build', authMiddleware, buildHandler);
 
+// Environment variable
+import dotenv from 'dotenv';
+dotenv.config({ path: "/etc/secrets/.env" });
+
 const cassitydev = createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
 cassitydev; // Run the bot instance if needed
 
