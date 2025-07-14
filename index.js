@@ -1,6 +1,6 @@
 // src/main.js
 import { loadMemory } from './handlers/memory.js';
-import { createBot } from './bot-manager.js';
+import { createBot } from './others/bot-manager.js';
 
 // Load memory
 await loadMemory();
