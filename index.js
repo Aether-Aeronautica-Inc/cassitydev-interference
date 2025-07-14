@@ -14,8 +14,7 @@ import './others/keep-alive.js';
 await loadMemory();
 
 const cassitydev = createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
-// createBot(process.env.DISCORD_TOKEN_2, 'DevAgent');
-// createBot(process.env.DISCORD_TOKEN_3, 'ManagerAI');
+cassitydev; // Run the bot instance if needed
 
 process.on('SIGINT', () => {
     console.log('Shutting down...');
