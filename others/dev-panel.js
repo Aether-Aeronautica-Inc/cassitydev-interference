@@ -20,6 +20,10 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'pages', 'home.html'));
 });
 
+app.get('/keep-alive', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'pages', 'keep-alive.html'))
+})
+
 app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'pages', 'login.html'));
 });

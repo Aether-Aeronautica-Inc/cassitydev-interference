@@ -8,7 +8,6 @@ import dotenv from 'dotenv';
 dotenv.config(/** { path: "/etc/secrets/.env" } **/);
 
 // Keep process alive
-import './others/keep-alive.js';
 import './others/dev-panel.js' // Build information & dev access panel
 
 // Load memory
