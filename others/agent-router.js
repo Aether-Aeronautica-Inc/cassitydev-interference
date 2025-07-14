@@ -1,6 +1,6 @@
 // src/agent-router.js
 import { executeIntent } from '../handlers/executor.js';
-import { queryGroq } from './handlers/agent.js';
+import { queryGroq } from '../handlers/agent.js';
 import rateLimiter from '../rate-limiter.js';
 
 export async function handleMessage(msg, agentName, client) {
