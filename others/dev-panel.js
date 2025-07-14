@@ -8,7 +8,6 @@ import { buildHandler } from '../pages/build.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
-const PORT = process.env.PORT || 3100;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -29,4 +28,4 @@ app.post('/login', loginHandler);
 
 app.get('/build', authMiddleware, buildHandler);
 
-app.listen(PORT);
+app.listen(process.env.PORT || 2000);
