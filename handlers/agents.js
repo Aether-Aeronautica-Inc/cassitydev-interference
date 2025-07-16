@@ -118,7 +118,7 @@ ${getPersonality(agentName)}
 
 export async function query(messages, agentName = 'Cassitydev') {
   try {
-    const response = await fetch('http://localhost:11434/chat', {
+    const response = await fetch('http://cassitydev-model.railway.internal/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
