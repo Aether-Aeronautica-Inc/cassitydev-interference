@@ -431,9 +431,9 @@ const actions = {
   },
 
   // End monologue
-  // end_monologue: () => {
-  //   return { message: "Ending monologue", code: 7 }
-  // }
+  end_monologue: () => {
+    return { message: "Ending monologue", code: 7 }
+  }
 };
 
 export default actions;
