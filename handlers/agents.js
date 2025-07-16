@@ -134,13 +134,24 @@ I don't mind. - Niwatori`,
       }),
     });
 
+    const text = await response.text();
+
     if (!response.ok) {
-      const err = await response.text();
-      console.error(`[${agentName}] Groq API Error ${response.status}: ${err}`);
+      const json = JSON.parse(text);
+      if (response.status === 429 && json?.error?.code === 'rate_limit_exceeded') {
+        const waitMatch = json.error.message.match(/in (\d+m\d+\.\d+s)/i);
+        const waitTimeStr = waitMatch?.[1] || '1m';
+        const seconds = parseDurationToMs(waitTimeStr);
+        console.warn(`[${agentName}] 🕓 Rate limited. Waiting ${waitTimeStr} (${seconds / 1000}s)...`);
+        await new Promise(res => setTimeout(res, seconds));
+        return null; // or try again if you want
+      }
+
+      console.error(`[${agentName}] Groq API Error ${response.status}: ${text}`);
       return null;
     }
 
-    const data = await response.json();
+    const data = JSON.parse(text);
     return data.choices?.[0]?.message?.content ?? null;
   } catch (err) {
     console.error(`[${agentName}] Query error:`, err);
