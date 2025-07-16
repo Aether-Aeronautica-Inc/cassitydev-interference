@@ -13,7 +13,11 @@ export async function loadMemory() {
 }
 
 export async function saveMemory() {
-  await fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
+  try {
+    fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
+  } catch (err) {
+    // sliently fail for railway's no filesystem architecture
+  }
 }
 
 export function getMemory(key) {
