@@ -36,5 +36,9 @@ export function clearMemory() {
 export async function storeMemory(entry) {
   const key = `msg:${entry.timestamp}`;
   memoryCache[key] = entry;
-  fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
+  try {
+    fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
+  } catch (err) {
+    // sliently fail for railway's no filesystem architecture
+  }
 }

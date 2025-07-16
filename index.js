@@ -6,7 +6,7 @@ import { createBot } from './others/bot-manager.js';
 await loadMemory();
 
 // Keep process alive
-import './others/dev-panel.js' // Build information & dev access panel
+// import './others/dev-panel.js' // Build information & dev access panel
 
 // Environment variable
 import dotenv from 'dotenv';
