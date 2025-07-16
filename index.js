@@ -12,7 +12,7 @@ import './others/dev-panel.js' // Build information & dev access panel
 import dotenv from 'dotenv';
 dotenv.config(/** { path: "/etc/secrets/.env" } **/);
 
-const cassitydev = createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
+const cassitydev = createBot(process.env.DISCORD_TOKEN, 'Cassitydev');
 cassitydev; // Run the bot instance if needed
 
 process.on('SIGINT', () => {

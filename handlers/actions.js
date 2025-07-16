@@ -204,15 +204,19 @@ const actions = {
     return { reply: `📁 File "${name}" saved.`, code: 0 };
   },
 
+  get_file_contents: async ({ name, start_section, end_section }) => {
+    try {
+      const contents = (await fs.readFile(`./sandbox/${name}`)).toString().slice(start_section, end_section)
+      return { reply: `📁 File "${name}" contents: \n\`\`\`\n${contents}\n\`\`\``, code: 0 }
+    } catch (err) {
+      return { reply: `💥 File read error: ${err.message}`, code: 1 }
+    }
+  },
+
   git_commit: async ({ message }, context) => {
     try {
-      const botId = context.client?.user?.id;
-      const gitName = process.env[`GITHUB_NAME_${botId}`];
-      const gitEmail = process.env[`GITHUB_EMAIL_${botId}`];
-  
-      if (!gitName || !gitEmail) {
-        return { reply: `❌ Git identity not configured for bot ID ${botId}`, code: 1 };
-      }
+      const gitName = process.env[`GITHUB_NAME`];
+      const gitEmail = process.env[`GITHUB_EMAIL`];
   
       await execAsync(`git config user.name "${gitName}"`);
       await execAsync(`git config user.email "${gitEmail}"`);
@@ -255,13 +259,8 @@ const actions = {
 
   // 🧱 GITHUB API INTEGRATION
   github_create_issue: async ({ repo, title, body }, context) => {
-    const botId = context.client?.user?.id;
-    const tokenEnvKey = `GITHUB_TOKEN_${botId}`;
+    const tokenEnvKey = `GITHUB_TOKEN`;
     const token = process.env[tokenEnvKey];
-  
-    if (!token) {
-      return { reply: `❌ GitHub token not found for bot ID: ${botId}`, code: 1 };
-    }
   
     const res = await fetch(`https://api.github.com/repos/${repo}/issues`, {
       method: 'POST',
@@ -285,11 +284,8 @@ const actions = {
   },
   
   whoami_github: async ({}, context) => {
-    const botId = context.client?.user?.id;
-    const tokenEnvKey = `GITHUB_TOKEN_BOT_${botId}`;
+    const tokenEnvKey = `GITHUB_TOKEN_BOT`;
     const token = process.env[tokenEnvKey];
-  
-    if (!token) return { reply: `❌ No GitHub token found for bot ID: ${botId}`, code: 1 };
   
     const res = await fetch("https://api.github.com/user", {
       headers: {
@@ -397,18 +393,6 @@ const actions = {
     }
   },
 
-  // 🛑 RATE LIMITING
-  set_rate_limit: async ({ type, maxPerMinute }, context) => {
-    context.rateLimits[type] = { maxPerMinute };
-    return { reply: `🚦 Rate limit for ${type}: ${maxPerMinute}/min`, code: 0 };
-  },
-
-  check_rate_limit: async ({ type }, context) => {
-    const current = context.rateUsage?.[type] || 0;
-    const max = context.rateLimits?.[type]?.maxPerMinute || '∞';
-    return { reply: `⏱️ ${type}: ${current}/${max} used this minute.`, code: 0 };
-  },
-
   // 👁️ THOUGHTS
   log_thought: async ({ content }, context) => {
     context.logs.push({ type: 'thought', content, timestamp: Date.now() });
@@ -439,12 +423,17 @@ const actions = {
     return { reply: `🧹 Memory wiped.`, code: 0 };
   },
 
-  "add_memory_entry": async ({ key, value }, { msg }) => {
+  add_memory_entry: async ({ key, value }, { msg }) => {
     const all = getAllMemory();
     all[key] = value;
     fs.writeFileSync('./memory.json', JSON.stringify(all, null, 2));
     return { reply: `🧠 Noted: ${key} = ${value}`, code: 0 };
-  }  
+  },
+
+  // End monologue
+  end_monologue: () => {
+    return { message: "Ending monologue", code: 7 }
+  }
 };
 
 export default actions;
