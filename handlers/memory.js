@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
-const MEMORY_FILE = './sandbox/memory.json';
 
+const MEMORY_FILE = './sandbox/memory.json';
 let memoryCache = {};
 
 export async function loadMemory() {
@@ -8,15 +8,19 @@ export async function loadMemory() {
     const raw = await fs.readFile(MEMORY_FILE, 'utf-8');
     memoryCache = JSON.parse(raw);
   } catch (err) {
-    memoryCache = {};
+    if (err.code === 'ENOENT') {
+      // File doesn't exist, keep current memoryCache
+    } else {
+      console.warn(`⚠️ Memory load failed: ${err.message}`);
+    }
   }
 }
 
 export async function saveMemory() {
   try {
-    fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
+    await fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
   } catch (err) {
-    // sliently fail for railway's no filesystem architecture
+    // silently fail on write, e.g. in Railway
   }
 }
 
@@ -41,8 +45,8 @@ export async function storeMemory(entry) {
   const key = `msg:${entry.timestamp}`;
   memoryCache[key] = entry;
   try {
-    fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
+    await fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
   } catch (err) {
-    // sliently fail for railway's no filesystem architecture
+    // silently fail
   }
 }
