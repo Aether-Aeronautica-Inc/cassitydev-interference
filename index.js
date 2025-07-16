@@ -10,7 +10,7 @@ import './others/dev-panel.js' // Build information & dev access panel
 
 // Environment variable
 import dotenv from 'dotenv';
-dotenv.config({ path: "/etc/secrets/.env" });
+dotenv.config(/** { path: "/etc/secrets/.env" } **/);
 
 const cassitydev = createBot(process.env.DISCORD_TOKEN_1, 'Cassitydev');
 cassitydev; // Run the bot instance if needed

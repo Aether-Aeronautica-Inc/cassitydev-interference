@@ -32,3 +32,9 @@ export function getAllMemory() {
 export function clearMemory() {
   memoryCache = {};
 }
+
+export async function storeMemory(entry) {
+  const key = `msg:${entry.timestamp}`;
+  memoryCache[key] = entry;
+  fs.writeFile(MEMORY_FILE, JSON.stringify(memoryCache, null, 2));
+}

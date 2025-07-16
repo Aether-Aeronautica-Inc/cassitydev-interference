@@ -12,7 +12,8 @@ export async function executeIntent(intentPayload, msg = null, client = null) {
   try {
     const context = { msg, client };
     const result = await action(args, context);
-    return { status: 'success', data: result };
+    if (result.code === 0) return { status: 'success', data: result };
+    else if (result.code === 1) return { status: 'failure', data: result };
   } catch (error) {
     return { status: 'error', message: `Execution failed: ${error.message}` };
   }
