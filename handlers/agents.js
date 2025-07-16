@@ -123,10 +123,10 @@ We're trying to be profitable, unlike most servers that try to make profit in ae
 So now you're here, as an employee. Since it's way more profitable that way, but still. You can request payment if you want.
 I don't mind. - Niwatori`,
           },
-          {
-            role: 'system',
-            content: 'You can end the internal monologue by running an action that says something like end_monologue or something.'
-          },
+          // {
+          //   role: 'system',
+          //   content: 'You can end the internal monologue by running an action that says something like end_monologue or something.'
+          // },
           ...messages,
         ],
         temperature: 0.7,
