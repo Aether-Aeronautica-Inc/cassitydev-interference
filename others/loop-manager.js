@@ -1,11 +1,11 @@
+// src/others/loopManager.js
 import { runInternalMonologueLoop, buildPrompt } from '../handlers/agents.js';
 import { appendToAgentMessages } from '../agents/state.js';
-import { getAllMemory } from '../handlers/memory.js';
+import { getAllMemory, setMemory, saveMemory } from '../handlers/memory.js';
 
 const runningAgents = {};
-
-// Replace with your default channel ID
 const DEFAULT_CHANNEL_ID = '1394565209817092126';
+const MAX_MEMORY_ENTRIES = 50;
 
 export async function startAgentLoop(agentName, client) {
   if (runningAgents[agentName]) return;
@@ -21,11 +21,24 @@ export async function startAgentLoop(agentName, client) {
     .map(m => `${m.author.username}: ${m.content}`)
     .join('\n');
 
-  const memories = Object.entries(getAllMemory())
-    .filter(([_, m]) => m.agent === agentName)
-    .map(([key, m]) => `- ${key}: ${m.content ?? JSON.stringify(m)}`);
+  // Clean old memory first
+  const allMemories = Object.entries(getAllMemory())
+    .filter(([_, m]) => m.agent === agentName);
 
-  // 🧠 Simulated fake "msg" context
+  const trimmed = allMemories
+    .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))
+    .slice(0, MAX_MEMORY_ENTRIES);
+
+  const memories = trimmed.map(([key, m]) => `- ${key}: ${m.content ?? JSON.stringify(m)}`);
+
+  const cleanMemory = {};
+  for (const [key, val] of trimmed) {
+    cleanMemory[key] = val;
+  }
+  setMemory('__cleaned__', true); // marker
+  await saveMemory();
+
+  // Fake msg context
   const fakeMsg = {
     author: client.user,
     content: 'boot',
@@ -41,7 +54,7 @@ export async function startAgentLoop(agentName, client) {
   while (true) {
     try {
       await runInternalMonologueLoop(agentName, fakeMsg, client);
-      await new Promise(r => setTimeout(r, 10000)); // idle wait
+      await new Promise(r => setTimeout(r, 10000));
     } catch (err) {
       console.error(`[${agentName}] Monologue loop error:`, err);
     }
