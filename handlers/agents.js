@@ -159,6 +159,12 @@ I don't mind. - Niwatori`,
   }
 }
 
+function parseDurationToMs(str) {
+  const [min, sec] = str.split('m');
+  const seconds = parseFloat(sec.replace('s', ''));
+  return (parseInt(min) * 60 + seconds) * 1000;
+}
+
 function getUserRoleSummary(msg) {
   const member = msg.guild.members.cache.get(msg.author.id);
   if (!member) return 'No roles found.';
