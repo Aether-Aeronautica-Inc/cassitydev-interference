@@ -3,12 +3,28 @@ import actions from './actions.js';
 import fetch from 'node-fetch';
 import { getAgentMessages, appendToAgentMessages } from '../agents/state.js';
 
+function trimMessagesToFitContext(messages, maxTokens = 1800) {
+  let totalTokens = 0;
+  const trimmed = [];
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    const estimatedTokens = Math.ceil(msg.content.length / 4); // rough estimate
+    if (totalTokens + estimatedTokens > maxTokens) break;
+    trimmed.unshift(msg); // prepend so we keep latest messages
+    totalTokens += estimatedTokens;
+  }
+
+  return trimmed;
+}
+
 export async function runInternalMonologueLoop(agentName, msg, client) {
   let loopCount = 0;
   const agentMessages = getAgentMessages(agentName);
 
-  while (loopCount < 10) {
-    const aiReply = await queryGroq(agentMessages, agentName);
+  while (loopCount < 100) {
+    const trimmedMessages = trimMessagesToFitContext(agentMessages);
+    const aiReply = await query(trimmedMessages, agentName);
     if (!aiReply) break;
 
     loopCount++;
@@ -100,69 +116,32 @@ ${getPersonality(agentName)}
 `.trim();
 }
 
-async function queryGroq(messages, agentName = 'Cassitydev') {
+export async function query(messages, agentName = 'Cassitydev') {
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('http://localhost:11434/chat', {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages: [
           {
             role: 'system',
-            content: `You are ${agentName}, a highly contextual AI developer in the discord server Aether Inc.
-Which is a roblox game, that has economy and stuff.
-Aether Inc. is an corporation under Aeronautica, that uses AI to automate everything.
-There's an airline division, an manufacturing division, and a cruise division.
-
-We operate for WP and Money, they are the currency of the game. Money isn't irl money, and don't put quotes on it, it's an actual ingame currency.
-We're trying to be profitable, unlike most servers that try to make profit in aeronautica (by profit, I mean in game currency profit)
-So now you're here, as an employee. Since it's way more profitable that way, but still. You can request payment if you want.
-I don't mind. - Niwatori`,
+            content: `You are ${agentName}, a highly contextual AI developer in the Discord server Aether Inc.
+Aether Inc. is a Roblox megacorp under Aeronautica with divisions: airline, manufacturing, cruise.
+Currency is WP and Money. "Money" is in-game currency (no quotes). We are focused on profit in-game, unlike most.
+You are an employee in this corp, feel free to request in-game payment.
+- Niwatori`
           },
-          // {
-          //   role: 'system',
-          //   content: 'You can end the internal monologue by running an action that says something like end_monologue or something.'
-          // },
-          ...messages,
-        ],
-        temperature: 0.7,
-        max_tokens: 1024,
-      }),
+          ...messages
+        ]
+      })
     });
 
-    const text = await response.text();
-
-    if (!response.ok) {
-      const json = JSON.parse(text);
-      if (response.status === 429 && json?.error?.code === 'rate_limit_exceeded') {
-        const waitMatch = json.error.message.match(/in (\d+m\d+\.\d+s)/i);
-        const waitTimeStr = waitMatch?.[1] || '1m';
-        const seconds = parseDurationToMs(waitTimeStr);
-        console.warn(`[${agentName}] 🕓 Rate limited. Waiting ${waitTimeStr} (${seconds / 1000}s)...`);
-        await new Promise(res => setTimeout(res, seconds));
-        return null; // or try again if you want
-      }
-
-      console.error(`[${agentName}] Groq API Error ${response.status}: ${text}`);
-      return null;
-    }
-
-    const data = JSON.parse(text);
-    return data.choices?.[0]?.message?.content ?? null;
+    const data = await response.json();
+    return data.response ?? null;
   } catch (err) {
-    console.error(`[${agentName}] Query error:`, err);
+    console.error(`[${agentName}] Local AI Error:`, err);
     return null;
   }
-}
-
-function parseDurationToMs(str) {
-  const [min, sec] = str.split('m');
-  const seconds = parseFloat(sec.replace('s', ''));
-  return (parseInt(min) * 60 + seconds) * 1000;
 }
 
 function getUserRoleSummary(msg) {

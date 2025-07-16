@@ -1,6 +1,7 @@
 // src/main.js
 import { loadMemory } from './handlers/memory.js';
 import { createBot } from './others/bot-manager.js';
+import { exec } from 'child_process' // Execute python servers
 
 // Load memory
 await loadMemory();

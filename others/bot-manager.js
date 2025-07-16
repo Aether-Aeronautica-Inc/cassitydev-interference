@@ -13,7 +13,7 @@ export function createBot(token, agentName) {
 
   client.on('ready', () => {
     console.log(`[${agentName}] connected as ${client.user.tag}`);
-    startAgentLoop(agentName, client);
+    startAgentLoop(agentName, client); 
   });
 
   client.on('messageCreate', async (msg) => {
