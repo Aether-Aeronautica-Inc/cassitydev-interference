@@ -34,7 +34,7 @@ export async function runInternalMonologueLoop(agentName, msg, client) {
   const agentMessages = getAgentMessages(agentName);
 
   while (loopCount < 100) {
-    const trimmedMessages = trimMessagesToFitContext(agentMessages);
+    const trimmedMessages = agentMessages;
     const aiReply = await query(trimmedMessages, agentName);
     if (!aiReply) break;
 
