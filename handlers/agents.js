@@ -3,17 +3,28 @@ import actions from './actions.js';
 import fetch from 'node-fetch';
 import { getAgentMessages, appendToAgentMessages } from '../agents/state.js';
 
-function trimMessagesToFitContext(messages, maxTokens = 1800) {
-  let totalTokens = 0;
-  const trimmed = [];
+function trimMessagesToFitContext(messages, maxTokens = 2000) {
+    let totalTokens = 0;
+    const trimmed = [];
 
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    const estimatedTokens = Math.ceil(msg.content.length / 4); // rough estimate
-    if (totalTokens + estimatedTokens > maxTokens) break;
-    trimmed.unshift(msg); // prepend so we keep latest messages
-    totalTokens += estimatedTokens;
-  }
+    const tokenEstimate = (text) => {
+      // More accurate than /4 — averages closer to ~3.7 for English
+      return Math.ceil(text.length / 3.7);
+    };
+
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      const roleTokens = tokenEstimate(msg.role || '') + 4; // minor buffer for role + structure
+      const contentTokens = tokenEstimate(msg.content || '');
+
+      const messageTokens = roleTokens + contentTokens;
+
+      // Leave 10-token buffer to avoid accidental overflows
+      if (totalTokens + messageTokens > maxTokens - 10) break;
+
+      trimmed.unshift(msg); // keep most recent messages
+        totalTokens += messageTokens;
+    }
 
   return trimmed;
 }
@@ -118,7 +129,7 @@ ${getPersonality(agentName)}
 
 export async function query(messages, agentName = 'Cassitydev') {
   try {
-    const response = await fetch('http://cassitydev-model.railway.internal/chat', {
+    const response = await fetch('http://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -139,7 +150,7 @@ You are an employee in this corp, feel free to request in-game payment.
     const data = await response.json();
     return data.response ?? null;
   } catch (err) {
-    console.error(`[${agentName}] Local AI Error:`, err);
+    console.error(`[${agentName}] API Error:`, err);
     return null;
   }
 }
