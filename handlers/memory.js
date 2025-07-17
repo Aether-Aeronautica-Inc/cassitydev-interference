@@ -68,7 +68,6 @@ export async function storeMemory(aiId, entry, weight = 1.0) {
   memoryCache[aiId][key] = {
     ...entry,
     weight,
-    timestamp: entry.timestamp
   };
 
   trimMemoryToFit(aiId);
