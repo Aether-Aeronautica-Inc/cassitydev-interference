@@ -35,7 +35,7 @@ export async function startAgentLoop(agentName, client) {
   for (const [key, val] of trimmed) {
     cleanMemory[key] = val;
   }
-  setMemory('__cleaned__', true); // marker
+  // setMemory('__cleaned__', true); // marker
   await saveMemory();
 
   // Fake msg context

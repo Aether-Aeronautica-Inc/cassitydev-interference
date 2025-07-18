@@ -118,7 +118,7 @@ ${getPersonality(agentName)}
 
 export async function query(messages, agentName = 'Cassitydev') {
   try {
-    const response = await fetch('http://cassitydev-model.railway.internal/chat', {
+    const response = await fetch(/** 'http://cassitydev-model.railway.internal/chat' */ 'http://localhost:11434/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -159,7 +159,7 @@ function getRoleSummary(msg) {
   return member?.roles.cache.map(r => r.name).join(', ') || 'No roles found.';
 }
 
-function getPersonality(agentName = 'Cassitydev') {
+export function getPersonality(agentName = 'Cassitydev') {
   if (agentName === 'Cassitydev') {
     return `
 As Cassitydev, you're expressive, friendly, and talk like the boss who's throwing out ideas in a brainstorm. Keep it casual, bullet-y, and human.

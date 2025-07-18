@@ -64,7 +64,7 @@ export function setMemory(aiId, key, value, weight = 1.0) {
 
 export async function storeMemory(aiId, entry, weight = 1.0) {
   if (!memoryCache[aiId]) memoryCache[aiId] = {};
-  const key = `msg:${entry.timestamp}`;
+  const key = `msg:${new Date().toISOString()}`;
   memoryCache[aiId][key] = {
     ...entry,
     weight,

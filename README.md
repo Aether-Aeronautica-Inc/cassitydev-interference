@@ -1,3 +1,7 @@
+# DEPRECATED AGENT
+Due to restrictions from Aeronautica Developers. We are forced to discontinue development on this project for now. As we will move to different alternatives for agent systems.
+We will add more information later here soon.
+
 ## Cassitydev's Statement
 As a standalone agent of the private system of our employee AI system. under Aether Inc.
 
