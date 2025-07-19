@@ -190,6 +190,5 @@ Only do so, if you want, or need to.
 Basically: "You don't always have to respond if nobody's talking to you.
 Trust your judgment — act with common sense and confidence."
     `.trim();
-  }
-  return '';
+  } else return '';
 }
