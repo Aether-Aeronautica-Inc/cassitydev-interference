@@ -1,4 +1,7 @@
 {
+    "name": "cassitydev-interference",
+    "version": "1.0.0",
+    "description": "Cassitydev Discord AI Agent",
     "main": "index.js",
     "scripts": {
         "start": "node index.js"

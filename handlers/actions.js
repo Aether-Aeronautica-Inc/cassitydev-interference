@@ -200,16 +200,23 @@ const actions = {
 
   // 🛠️ FILE + GITOPS
   create_file: async ({ name, content }) => {
-    await fs.writeFile(`./sandbox/${name}`, content);
-    return { reply: `📁 File "${name}" saved.`, code: 0 };
+    try {
+      // Ensure sandbox directory exists
+      await fs.mkdir('./sandbox', { recursive: true });
+      await fs.writeFile(`./sandbox/${name}`, content);
+      return { reply: `📁 File "${name}" saved.`, code: 0 };
+    } catch (err) {
+      return { reply: `💥 File creation error: ${err.message}`, code: 1 };
+    }
   },
 
   get_file_contents: async ({ name, start_section, end_section }) => {
     try {
-      const contents = (await fs.readFile(`./sandbox/${name}`)).toString().slice(start_section, end_section)
-      return { reply: `📁 File "${name}" contents: \n\`\`\`\n${contents}\n\`\`\``, code: 0 }
+      const contents = (await fs.readFile(`./sandbox/${name}`)).toString();
+      const sliced = start_section || end_section ? contents.slice(start_section || 0, end_section) : contents;
+      return { reply: `📁 File "${name}" contents: \n\`\`\`\n${sliced.slice(0, 1900)}\n\`\`\``, code: 0 };
     } catch (err) {
-      return { reply: `💥 File read error: ${err.message}`, code: 1 }
+      return { reply: `💥 File read error: ${err.message}`, code: 1 };
     }
   },
 
@@ -400,40 +407,79 @@ const actions = {
   },
 
   // Memory related actions
-  remember_fact: async ({ key, value }) => {
-    setMemory(key, value);
-    await saveMemory();
-    return { reply: `🧠 Remembered: ${key} = ${value}`, code: 0 };
+  remember_fact: async ({ key, value }, context) => {
+    try {
+      setMemory(key, value, 'Cassitydev');
+      await saveMemory();
+      return { reply: `🧠 Remembered: ${key} = ${value}`, code: 0 };
+    } catch (err) {
+      return { reply: `❌ Memory error: ${err.message}`, code: 1 };
+    }
   },
   
   recall_fact: async ({ key }) => {
-    const val = getMemory(key);
-    return { reply: val ? `📌 ${key} = ${val}` : `⚠️ No memory for ${key}`, code: 0 };
+    try {
+      const val = getMemory(key, 'Cassitydev');
+      const content = val?.content || val;
+      return { reply: content ? `📌 ${key} = ${content}` : `⚠️ No memory for ${key}`, code: 0 };
+    } catch (err) {
+      return { reply: `❌ Recall error: ${err.message}`, code: 1 };
+    }
   },
   
   dump_memory: async () => {
-    const data = getAllMemory();
-    const dump = JSON.stringify(data, null, 2);
-    return { reply: `🧾 Memory:\n\`\`\`json\n${dump.slice(0, 1900)}\n\`\`\``, code: 0 };
+    try {
+      const data = getAllMemory('Cassitydev');
+      const dump = JSON.stringify(data, null, 2);
+      return { reply: `🧾 Memory:\n\`\`\`json\n${dump.slice(0, 1900)}\n\`\`\``, code: 0 };
+    } catch (err) {
+      return { reply: `❌ Memory dump error: ${err.message}`, code: 1 };
+    }
   },
 
   reset_memory: async () => {
-    clearMemory();
-    await saveMemory();
-    return { reply: `🧹 Memory wiped.`, code: 0 };
+    try {
+      clearMemory('Cassitydev');
+      await saveMemory();
+      return { reply: `🧹 Memory wiped.`, code: 0 };
+    } catch (err) {
+      return { reply: `❌ Memory reset error: ${err.message}`, code: 1 };
+    }
   },
 
-  add_memory_entry: async ({ key, value }, { msg }) => {
-    const all = getAllMemory();
-    all[key] = value;
-    fs.writeFileSync('./memory.json', JSON.stringify(all, null, 2));
-    return { reply: `🧠 Noted: ${key} = ${value}`, code: 0 };
+  add_memory_entry: async ({ key, value }, context) => {
+    try {
+      setMemory(key, value, 'Cassitydev');
+      await saveMemory();
+      return { reply: `🧠 Noted: ${key} = ${value}`, code: 0 };
+    } catch (err) {
+      return { reply: `❌ Memory entry error: ${err.message}`, code: 1 };
+    }
   },
 
-  // End monologue
-  // end_monologue: () => {
-  //   return { message: "Ending monologue", code: 7 }
-  // }
+  // End monologue - critical for stopping the internal monologue loop
+  end_monologue: async ({ reason = 'Task completed' }, context) => {
+    console.log(`[${context.agentName || 'Agent'}] Ending monologue: ${reason}`);
+    return { reply: `✅ Monologue ended: ${reason}`, code: 7 };
+  },
+
+  // Debug action for checking system status
+  system_status: async ({}, context) => {
+    try {
+      const memoryCount = Object.keys(getAllMemory('Cassitydev')).length;
+      const uptime = process.uptime();
+      return {
+        reply: `🔧 System Status:
+• Memory entries: ${memoryCount}
+• Uptime: ${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s
+• Node version: ${process.version}
+• Platform: ${process.platform}`,
+        code: 0
+      };
+    } catch (err) {
+      return { reply: `❌ Status check error: ${err.message}`, code: 1 };
+    }
+  }
 };
 
 export default actions;

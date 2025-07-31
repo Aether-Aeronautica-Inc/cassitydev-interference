@@ -1,6 +1,6 @@
 // src/others/loopManager.js
 import { runInternalMonologueLoop, buildPrompt } from '../handlers/agents.js';
-import { appendToAgentMessages } from '../agents/state.js';
+import { appendToAgentMessages, getAgentMessages } from '../agents/state.js';
 import { getAllMemory, setMemory, saveMemory } from '../handlers/memory.js';
 
 const runningAgents = {};
@@ -22,7 +22,7 @@ export async function startAgentLoop(agentName, client) {
     .join('\n');
 
   // Clean old memory first
-  const allMemories = Object.entries(getAllMemory())
+  const allMemories = Object.entries(getAllMemory(agentName))
     .filter(([_, m]) => m.agent === agentName);
 
   const trimmed = allMemories
@@ -35,7 +35,7 @@ export async function startAgentLoop(agentName, client) {
   for (const [key, val] of trimmed) {
     cleanMemory[key] = val;
   }
-  // setMemory('__cleaned__', true); // marker
+  // setMemory('__cleaned__', true, agentName); // marker
   await saveMemory();
 
   // Fake msg context
@@ -49,7 +49,13 @@ export async function startAgentLoop(agentName, client) {
   };
 
   const systemPrompt = buildPrompt(fakeMsg, agentName, memories, sortedHistory);
+  
+  // Clear any existing messages and add the proper system prompt
+  const agentMessages = getAgentMessages(agentName);
+  agentMessages.length = 0; // Clear existing messages
   appendToAgentMessages(agentName, { role: 'system', content: systemPrompt });
+  
+  console.log(`[${agentName}] System prompt added: ${systemPrompt.substring(0, 200)}...`);
 
   while (true) {
     try {

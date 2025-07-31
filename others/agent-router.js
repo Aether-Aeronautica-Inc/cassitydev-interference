@@ -22,7 +22,7 @@ export async function handleMessageRouter(msg, agentName) {
     injectUserMessage(agentName, `<@${msg.author.id}> said: "${msg.content}"`);
 
     const now = new Date().toISOString();
-    await storeMemory({
+    await storeMemory(agentName, {
       user_id: msg.author.id,
       content: msg.content,
       timestamp: now,

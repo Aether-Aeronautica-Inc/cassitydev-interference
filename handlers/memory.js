@@ -36,11 +36,11 @@ export async function saveMemory() {
   }
 }
 
-export function getMemory(aiId, key) {
+export function getMemory(key, aiId = 'Cassitydev') {
   return memoryCache[aiId]?.[key];
 }
 
-export function getAllMemory(aiId) {
+export function getAllMemory(aiId = 'Cassitydev') {
   return memoryCache[aiId] || {};
 }
 
@@ -52,7 +52,7 @@ export function clearMemory(aiId = null) {
   }
 }
 
-export function setMemory(aiId, key, value, weight = 1.0) {
+export function setMemory(key, value, aiId = 'Cassitydev', weight = 1.0) {
   if (!memoryCache[aiId]) memoryCache[aiId] = {};
   memoryCache[aiId][key] = {
     content: value,
